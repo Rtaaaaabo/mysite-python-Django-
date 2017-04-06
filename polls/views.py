@@ -9,7 +9,7 @@ from .models import Question, Choice
 # Create your views here.
 
 
-class IndexView(ListView):
+class Index(ListView):
     template_name = 'polls/index.html'
     context_object_name = 'latest_question_list'    #templatesから参照できる
 
@@ -21,10 +21,10 @@ class IndexView(ListView):
             pub_date__lte=timezone.now()
         ).order_by('-pub_date')[:5]
 
-index = IndexView.as_view()
+index = Index.as_view()
 
 
-class DetailView(DetailView):
+class Detail(DetailView):
     model = Question
     template_name = 'polls/detail.html'
 
@@ -34,14 +34,14 @@ class DetailView(DetailView):
         """
         return Question.objects.filter(pub_date__lte=timezone.now())
 
-detail = DetailView.as_view()
+detail = Detail.as_view()
 
 
-class ResultsView(DetailView):
+class Results(DetailView):
     model = Question
     template_name = 'polls/results.html'
 
-result = ResultsView.as_view()
+result = Results.as_view()
 
 
 def vote(request, question_id):
