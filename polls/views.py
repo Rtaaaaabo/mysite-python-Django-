@@ -1,0 +1,60 @@
+from django.shortcuts import render, get_object_or_404
+from django.http import HttpResponseRedirect
+from django.core.urlresolvers import reverse
+from django.views.generic import ListView, DetailView
+from django.utils import timezone
+
+from .models import Question, Choice
+
+# Create your views here.
+
+
+class IndexView(ListView):
+    template_name = 'polls/index.html'
+    context_object_name = 'latest_question_list'    #templatesから参照できる
+
+    def get_queryset(self):
+        """
+        Retrun the last five published questions (not including those set to be publishd in the future
+        """
+        return Question.objects.filter(
+            pub_date__lte=timezone.now()
+        ).order_by('-pub_date')[:5]
+
+index = IndexView.as_view()
+
+
+class DetailView(DetailView):
+    model = Question
+    template_name = 'polls/detail.html'
+
+    def get_queryset(self):
+        """
+        Excludes any questions that aren't published yet.
+        """
+        return Question.objects.filter(pub_date__lte=timezone.now())
+
+detail = DetailView.as_view()
+
+
+class ResultsView(DetailView):
+    model = Question
+    template_name = 'polls/results.html'
+
+result = ResultsView.as_view()
+
+
+def vote(request, question_id):
+    question = get_object_or_404(Question, pk=question_id)
+    try:
+        selected_choice = question.choice_set.get(pk=request.POST['choice'])
+    except(KeyError, Choice.DoesNotExist):
+        # Redisplay the question voting form.
+        return render(request, 'polls/detail.html', {
+          'question': question,
+            'error_message':"You didn't select a choice.",
+        })
+    else:
+        selected_choice.vote += 1
+        selected_choice.save()
+        return HttpResponseRedirect(reverse('polls:results', args=(question.id,)))
